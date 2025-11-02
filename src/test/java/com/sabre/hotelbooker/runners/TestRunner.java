@@ -12,7 +12,8 @@ import org.junit.runner.RunWith;
         "pretty",
         "html:reports/cucumber-html-report.html",
         "com.sabre.hotelbooker.utils.ExtentStepLogger"
-    }
+    },
+        tags = "@HotelAvailability and @AI"
 )
 public class TestRunner {
 }

@@ -85,21 +85,21 @@ public class ExtentReportCleaner {
         System.out.println("Extent report cleaned: " + reportPath);
     }
 
-    // Helper to parse duration string like 00:00:29:749 to milliseconds
-    private static long parseDuration(String duration) {
-        if (duration == null || duration.isEmpty()) return 0;
-        String[] parts = duration.split(":");
-        if (parts.length != 4) return 0;
-        try {
-            long h = Long.parseLong(parts[0]);
-            long m = Long.parseLong(parts[1]);
-            long s = Long.parseLong(parts[2]);
-            long ms = Long.parseLong(parts[3]);
-            return (((h * 60 + m) * 60 + s) * 1000) + ms;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
+    // // Helper to parse duration string like 00:00:29:749 to milliseconds
+    // private static long parseDuration(String duration) {
+    //     if (duration == null || duration.isEmpty()) return 0;
+    //     String[] parts = duration.split(":");
+    //     if (parts.length != 4) return 0;
+    //     try {
+    //         long h = Long.parseLong(parts[0]);
+    //         long m = Long.parseLong(parts[1]);
+    //         long s = Long.parseLong(parts[2]);
+    //         long ms = Long.parseLong(parts[3]);
+    //         return (((h * 60 + m) * 60 + s) * 1000) + ms;
+    //     } catch (Exception e) {
+    //         return 0;
+    //     }
+    // }
 
     private static String findLatestExtentReport() {
         File reportsDir = new File("reports");

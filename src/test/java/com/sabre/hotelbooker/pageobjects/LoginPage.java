@@ -1,86 +1,100 @@
- package com.sabre.hotelbooker.pageobjects;
+package com.sabre.hotelbooker.pageobjects;
 
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.LoadState;
+import com.sabre.hotelbooker.hotelbooker.ApplicationConstants;
 import com.sabre.hotelbooker.stepdefinitions.Hooks;
+import com.sabre.hotelbooker.utils.ConfigReader;
 
 public class LoginPage {
-    private Page page;
+     private static final String USERNAME_INPUT = "#ctl00_cphMainContent_txtUserName";
+    private static final String PASSWORD_INPUT = "#ctl00_cphMainContent_txtPassword";
+    private static final String LOGIN_BUTTON = "#ctl00_cphMainContent_btnLogin";
+    private static final String FORGOTTEN_PASSWORD_LINK = "#btnForgotten";
+    private static final String FORGOTTEN_USERNAME_INPUT = "#ctl00_cphMainContent_ucForgottenPassword_txtForgottenUserName";
+    private static final String FORGOTTEN_NEXT_BUTTON = "#ctl00_cphMainContent_ucForgottenPassword_btnFindUser";
+    private static final String SECURITY_ANSWER_INPUT = "#ctl00_cphMainContent_ucForgottenPassword_txtAnswer";
+    private static final String SECURITY_ANSWER_NEXT_BUTTON = "#ctl00_cphMainContent_ucForgottenPassword_btnAnswerQuestion";
+    private static final String CANCEL_FORGOTTEN_PASSWORD = "a[href='javascript: cancelForgottenPassword();']";
+    private static final String TERMS_LINK = "a[href='Terms.aspx']";
+    private static final String PRIVACY_LINK = "a[href='https://www.sabre.com/about/privacy/']";
 
-    public LoginPage(Page page){
+    private final Page page;
+
+    public LoginPage(Page page) {
         this.page = page;
     }
 
-    // type: hidden
-    private final String __VIEWSTATE = "#__VIEWSTATE";
-    public void set__VIEWSTATE(String value) {
-        page.fill(__VIEWSTATE, value);
+    public void navigateToLoginPage() {
+        page.navigate(ConfigReader.getProperty(ApplicationConstants.HOTEL_BOOKER_URL));
+        page.waitForLoadState(LoadState.NETWORKIDLE);
+        page.waitForTimeout(2000); 
+        Hooks.Extent_INFO("Opened HotelBooker login page.");
     }
 
-    // type: hidden
-    private final String __VIEWSTATEGENERATOR = "#__VIEWSTATEGENERATOR";
-    public void set__VIEWSTATEGENERATOR(String value) {
-        page.fill(__VIEWSTATEGENERATOR, value);
+    public void enterUserName() {
+        String UserName = ConfigReader.getProperty(ApplicationConstants.USER_NAME);
+        page.fill(USERNAME_INPUT, UserName);
+        Hooks.Extent_INFO("Filled username field.");
     }
 
-    // type: hidden
-    private final String __EVENTVALIDATION = "#__EVENTVALIDATION";
-    public void set__EVENTVALIDATION(String value) {
-        page.fill(__EVENTVALIDATION, value);
+    public void enterPassword() {
+        String Password = ConfigReader.getProperty(ApplicationConstants.PASSWORD);
+        page.fill(PASSWORD_INPUT, Password);
+        Hooks.Extent_INFO("Filled password field.");
     }
 
-    // type: text
-    private final String ctl00_cphMainContent_txtUserName = "#ctl00_cphMainContent_txtUserName";
-    public void UserName(String value) {
-        page.fill(ctl00_cphMainContent_txtUserName, value);
-    }
-
-    // type: password
-    private final String ctl00_cphMainContent_txtPassword = "#ctl00_cphMainContent_txtPassword";
-    public void Password(String value) {
-        page.fill(ctl00_cphMainContent_txtPassword, value);
-        Hooks.logToExtent("Given Paswword.");
-    }
-
-    // type: submit
-    private final String ctl00_cphMainContent_btnLogin = "#ctl00_cphMainContent_btnLogin";
     public void clickLogin() {
-        page.click(ctl00_cphMainContent_btnLogin);
-        Hooks.logToExtent("Then Clicked on Login button.");
+        page.click(LOGIN_BUTTON);
+        Hooks.Extent_INFO("Clicked Login button.");
     }
 
-    // type: text
-    private final String ctl00_cphMainContent_ucForgottenPassword_txtForgottenUserName = "#ctl00_cphMainContent_ucForgottenPassword_txtForgottenUserName";
-    public void ForgottenUserName(String value) {
-        page.fill(ctl00_cphMainContent_ucForgottenPassword_txtForgottenUserName, value);
+    public void clickForgottenPassword() {
+        page.click(FORGOTTEN_PASSWORD_LINK);
+        Hooks.Extent_INFO("Opened Forgotten Password wizard.");
     }
 
-    // type: submit
-    private final String ctl00_cphMainContent_ucForgottenPassword_btnFindUser = "#ctl00_cphMainContent_ucForgottenPassword_btnFindUser";
-    public void setCtl00_cphMainContent_ucForgottenPassword_btnFindUser(String value) {
-        page.fill(ctl00_cphMainContent_ucForgottenPassword_btnFindUser, value);
+    public void enterForgottenUserName(String userName) {
+        page.fill(FORGOTTEN_USERNAME_INPUT, userName);
+        Hooks.Extent_INFO("Entered Forgotten Password username.");
     }
 
-    // type: text
-    private final String ctl00_cphMainContent_ucForgottenPassword_txtAnswer = "#ctl00_cphMainContent_ucForgottenPassword_txtAnswer";
-    public void setCtl00_cphMainContent_ucForgottenPassword_txtAnswer(String value) {
-        page.fill(ctl00_cphMainContent_ucForgottenPassword_txtAnswer, value);
+    public void submitForgottenUserName() {
+        page.click(FORGOTTEN_NEXT_BUTTON);
+        Hooks.Extent_INFO("Submitted Forgotten Password username.");
     }
 
-    // type: submit
-    private final String ctl00_cphMainContent_ucForgottenPassword_btnAnswerQuestion = "#ctl00_cphMainContent_ucForgottenPassword_btnAnswerQuestion";
-    public void setCtl00_cphMainContent_ucForgottenPassword_btnAnswerQuestion(String value) {
-        page.fill(ctl00_cphMainContent_ucForgottenPassword_btnAnswerQuestion, value);
+    public void enterSecurityAnswer(String answer) {
+        page.fill(SECURITY_ANSWER_INPUT, answer);
+        Hooks.Extent_INFO("Entered security answer for Forgotten Password.");
     }
 
-    // type: hidden
-    private final String ctl00_hdnPageToken = "#ctl00_hdnPageToken";
-    public void setCtl00_hdnPageToken(String value) {
-        page.fill(ctl00_hdnPageToken, value);
+    public void submitSecurityAnswer() {
+        page.click(SECURITY_ANSWER_NEXT_BUTTON);
+        Hooks.Extent_INFO("Submitted security answer for Forgotten Password.");
     }
 
-    // Returns true if the logout button is visible (update selector as needed)
-     private final String logoutSelector = "#ctl00_cphMainContent_ucForgottenPassword_btnAnswerQuestion";
-    public boolean isLogoutVisible() {    
-        return page.isVisible(logoutSelector);
+    public void cancelForgottenPassword() {
+        page.click(CANCEL_FORGOTTEN_PASSWORD);
+        Hooks.Extent_INFO("Cancelled Forgotten Password wizard.");
+    }
+
+    public void openTerms() {
+        page.click(TERMS_LINK);
+        Hooks.Extent_INFO("Opened Terms & Conditions.");
+    }
+
+    public void openPrivacy() {
+        page.click(PRIVACY_LINK);
+        Hooks.Extent_INFO("Opened Privacy page.");
+    }
+
+    public boolean isLoginButtonVisible() {
+        return page.isVisible(LOGIN_BUTTON);
+    }
+
+    public Locator getLoginButton() {
+        return page.locator(LOGIN_BUTTON);
     }
 }

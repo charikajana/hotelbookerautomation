@@ -5,19 +5,19 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class ConfigReader {
-    private Properties properties;
+    private static Properties properties;
 
-    public ConfigReader() {
-        properties = new Properties();
-        try {
-            FileInputStream fis = new FileInputStream("src/test/resources/config.properties");
+    public static String getProperty(String key) {
+        if(properties == null) {
+         properties = new Properties();
+        String env = System.getProperty("env", "DEV").toUpperCase();
+        String propFile = String.format("src/test/resources/env/%s.properties", env);
+        try (FileInputStream fis = new FileInputStream(propFile)) {
             properties.load(fis);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Could not load properties file for environment: " + env + " (" + propFile + ")", e);
         }
     }
-
-    public String getProperty(String key) {
         return properties.getProperty(key);
     }
 }

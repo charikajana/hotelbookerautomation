@@ -10,13 +10,12 @@ import java.util.Map;
 public class ExtentCucumberPlugin implements ConcurrentEventListener {
     private ExtentReports extent = ExtentReportManager.getInstance();
     private Map<String, ExtentTest> scenarioTestMap = new HashMap<>();
-    // Track example count per scenario outline name
     private Map<String, Integer> scenarioExampleCounter = new HashMap<>();
 
     @Override
     public void setEventPublisher(EventPublisher publisher) {
         publisher.registerHandlerFor(TestCaseStarted.class, this::handleTestCaseStarted);
-        publisher.registerHandlerFor(TestStepStarted.class, this::handleStepStarted);
+        publisher.registerHandlerFor(TestStepFinished.class, this::handleStepFinished);
         publisher.registerHandlerFor(TestCaseFinished.class, this::handleTestCaseFinished);
     }
 
@@ -36,29 +35,80 @@ public class ExtentCucumberPlugin implements ConcurrentEventListener {
         }
     }
 
-    private void handleStepStarted(TestStepStarted event) {
-        try {
-            java.nio.file.Files.write(
-                java.nio.file.Paths.get("step_plugin_invoked.txt"),
-                ("Step event: " + System.currentTimeMillis() + System.lineSeparator()).getBytes(),
-                java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND
-            );
-        } catch (Exception e) {
-            // ignore
-        }
-        TestStep testStep = event.getTestStep();
-        if (testStep instanceof PickleStepTestStep) {
-            PickleStepTestStep pickleStep = (PickleStepTestStep) testStep;
+    private void handleStepFinished(TestStepFinished event) {
+        String testCaseId = event.getTestCase().getId().toString();
+        ExtentTest test = scenarioTestMap.get(testCaseId);
+        
+        if (test != null && event.getTestStep() instanceof PickleStepTestStep) {
+            PickleStepTestStep pickleStep = (PickleStepTestStep) event.getTestStep();
             String stepText = pickleStep.getStep().getKeyword() + pickleStep.getStep().getText();
-            String scenarioId = event.getTestCase().getId().toString();
-            ExtentTest test = scenarioTestMap.get(scenarioId);
-            if (test != null) {
-                test.info(stepText);
+            Status stepStatus = event.getResult().getStatus();
+            
+            // Log step based on its actual execution result
+            switch (stepStatus) {
+                case PASSED:
+                    test.pass(stepText);
+                    break;
+                case FAILED:
+                    Throwable error = event.getResult().getError();
+                    String errorMessage = error != null ? error.getMessage() : "Unknown error";
+                    test.fail(stepText + " - " + errorMessage);
+                    
+                    // Check if this is a critical failure and add additional info
+                    if (error != null && error.getClass().getSimpleName().equals("CriticalTestFailureException")) {
+                        test.fail("❌ CRITICAL FAILURE: Test execution stopped immediately");
+                    }
+                    break;
+                case SKIPPED:
+                    test.skip(stepText + " - Skipped");
+                    break;
+                case PENDING:
+                    test.warning(stepText + " - Pending");
+                    break;
+                case UNDEFINED:
+                    test.warning(stepText + " - Undefined");
+                    break;
+                default:
+                    test.info(stepText + " - " + stepStatus.toString());
+                    break;
             }
         }
     }
 
     private void handleTestCaseFinished(TestCaseFinished event) {
-        scenarioTestMap.remove(event.getTestCase().getId().toString());
+        String testCaseId = event.getTestCase().getId().toString();
+        ExtentTest test = scenarioTestMap.get(testCaseId);
+        
+        if (test != null) {
+            Status status = event.getResult().getStatus();
+            
+            switch (status) {
+                case PASSED:
+                    test.pass("✅ Test Completed Successfully");
+                    break;
+                case FAILED:
+                    Throwable error = event.getResult().getError();
+                    if (error != null && error.getClass().getSimpleName().equals("CriticalTestFailureException")) {
+                        test.fail("❌ Test Failed Due to Critical Failure - Execution Stopped Immediately");
+                    } else {
+                        test.fail("❌ Test Failed: " + (error != null ? error.getMessage() : "Unknown error"));
+                    }
+                    if (error != null) {
+                        test.fail(error);
+                    }
+                    break;
+                case SKIPPED:
+                    test.skip("⏭️ Test Skipped");
+                    break;
+                default:
+                    test.info("Test Status: " + status.toString());
+                    break;
+            }
+        }
+        
+        // Clean up tracking maps for this test case
+        scenarioTestMap.remove(testCaseId);
+        
+        extent.flush();
     }
 }

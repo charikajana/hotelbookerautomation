@@ -2,6 +2,7 @@
 package com.sabre.hotelbooker.base;
 
 import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.LoadState;
 import com.sabre.hotelbooker.utils.ConfigReader;
 
 
@@ -13,8 +14,7 @@ public class BaseTest {
 
 
     public static void initialize() {
-        ConfigReader config = new ConfigReader();
-        String browserName = config.getProperty("browser");
+        String browserName = ConfigReader.getProperty("browserName");
         playwright = Playwright.create();
         switch (browserName.toLowerCase()) {
             case "firefox":
@@ -28,6 +28,15 @@ public class BaseTest {
         }
         context = browser.newContext();
         page = context.newPage();
+        // Maximize the browser window
+        try {
+            int screenWidth = java.awt.Toolkit.getDefaultToolkit().getScreenSize().width;
+            int screenHeight = java.awt.Toolkit.getDefaultToolkit().getScreenSize().height;
+            page.setViewportSize(screenWidth, screenHeight);
+        } catch (Exception e) {
+            // Fallback to a large size if Toolkit is not available (e.g., headless or server)
+            page.setViewportSize(1920, 1080);
+        }
     }
 
     public static void tearDown() {
@@ -35,6 +44,16 @@ public class BaseTest {
         if (browser != null) browser.close();
         if (playwright != null) playwright.close();
     }
+    public static void waitForPageLoadComplete() {
+        try {
+            page.waitForLoadState(LoadState.LOAD);
+            page.waitForLoadState(LoadState.NETWORKIDLE);
+            page.waitForTimeout(1000);
+        } catch (Exception e) {
+            System.err.println("Warning: Page load wait encountered an issue: " + e.getMessage());
+        }
+    }
+
     public static void captureScreenshotWithInfo(com.microsoft.playwright.Page page, String info, com.aventstack.extentreports.ExtentTest test) {
         String currentTimestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss_SSS").format(new java.util.Date());
         String screenshotPath = captureScreenshotToFile(page, currentTimestamp);
